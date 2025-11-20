@@ -1,0 +1,5 @@
+{
+  "name": "Overtime & Shift Calculator",
+  "description": "A smart overtime calculator that handles variable rates for weekdays, weekends, bank holidays, and specific unsociable hour premiums.",
+  "requestFramePermissions": []
+}
