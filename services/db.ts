@@ -31,8 +31,7 @@ export const subscribeToShifts = (userId: string, callback: (shifts: ShiftInput[
 
 export const addShiftToDb = async (userId: string, shift: Omit<ShiftInput, 'id'>) => {
   if (!db) {
-    console.error("Firestore DB not initialized. Cannot save shift.");
-    return;
+    throw new Error("Database not initialized. Please check your configuration.");
   }
   const shiftsRef = collection(db, 'users', userId, 'shifts');
   await addDoc(shiftsRef, shift);

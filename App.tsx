@@ -170,7 +170,7 @@ function App() {
                 className="flex items-center gap-1 text-sm text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 px-2 py-1"
               >
                 <Settings size={16} />
-                <span className="hidden sm:inline">Settings</span>
+                <span className="inline">Settings</span>
               </button>
               <div className="h-6 w-px bg-slate-200 dark:bg-slate-700 mx-1"></div>
               <button 
