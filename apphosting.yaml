@@ -23,7 +23,7 @@ runConfig:
   #   secret: mySecretRef
 env:
   - variable: NEXT_PUBLIC_FIREBASE_API_KEY
-    secret: web-firebase-api-key
+    secret: webapp-firebase-api-key
   - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
     value: overtimepro-46e43.firebaseapp.com
   - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
