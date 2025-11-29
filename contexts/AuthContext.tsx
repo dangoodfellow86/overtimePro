@@ -1,8 +1,5 @@
-<<<<<<< HEAD
 "use client";
 
-=======
->>>>>>> 0b1b55a5f3bb67b38c528286b7ef3f43f149a5bd
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { auth } from '../services/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';

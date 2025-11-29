@@ -1,8 +1,5 @@
-<<<<<<< HEAD
 "use client";
 
-=======
->>>>>>> 0b1b55a5f3bb67b38c528286b7ef3f43f149a5bd
 import React, { useState } from 'react';
 import { auth } from '../services/firebase';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
