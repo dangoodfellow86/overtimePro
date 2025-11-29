@@ -1,8 +1,12 @@
 import { GoogleGenAI } from "@google/genai";
 import { ShiftResult, AiAnalysis } from "../types";
 
+<<<<<<< HEAD
 // In Next.js client components, environment variables need NEXT_PUBLIC_ prefix
 const ai = new GoogleGenAI({ apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY || '' });
+=======
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+>>>>>>> 0b1b55a5f3bb67b38c528286b7ef3f43f149a5bd
 
 export const analyzeShifts = async (shifts: ShiftResult[]): Promise<AiAnalysis> => {
   if (shifts.length === 0) {

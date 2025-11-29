@@ -1,5 +1,8 @@
+<<<<<<< HEAD
 "use client";
 
+=======
+>>>>>>> 0b1b55a5f3bb67b38c528286b7ef3f43f149a5bd
 import React, { useState } from 'react';
 import { PoundSterling, ArrowRight } from 'lucide-react';
 
