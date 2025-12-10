@@ -6,6 +6,7 @@ import { calculateShift } from './utils/calculator';
 import { ShiftForm } from './components/ShiftForm';
 import { ShiftList } from './components/ShiftList';
 import { StatsCards } from './components/StatsCards';
+import { DateRangeFilter } from './components/DateRangeFilter';
 import { AiInsight } from './components/AiInsight';
 import { Onboarding } from './components/Onboarding';
 import { Auth } from './components/Auth';
@@ -22,6 +23,16 @@ function App() {
   const [standardRate, setStandardRate] = useState<number | null>(null);
   const [dataLoading, setDataLoading] = useState(false);
   
+  // Date Range State
+  const [startDate, setStartDate] = useState(() => {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+  });
+  const [endDate, setEndDate] = useState(() => {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+  });
+
   // Dark Mode State
   const [isDarkMode, setIsDarkMode] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -94,22 +105,38 @@ function App() {
     if (auth) await signOut(auth);
   };
 
+  // Filter shifts based on date range
+  const filteredShifts = useMemo(() => {
+    if (!startDate && !endDate) return shifts;
+    
+    return shifts.filter(shift => {
+      if (startDate && shift.date < startDate) return false;
+      if (endDate && shift.date > endDate) return false;
+      return true;
+    });
+  }, [shifts, startDate, endDate]);
+
   // Derived stats
   const stats = useMemo(() => {
-    const totalPay = shifts.reduce((acc, s) => acc + s.totalPay, 0);
-    const totalHours = shifts.reduce((acc, s) => acc + s.totalHours, 0);
-    const shiftCount = shifts.length;
+    const totalPay = filteredShifts.reduce((acc, s) => acc + s.totalPay, 0);
+    const totalHours = filteredShifts.reduce((acc, s) => acc + s.totalHours, 0);
+    const shiftCount = filteredShifts.length;
     const avgHourlyRate = totalHours > 0 ? totalPay / totalHours : 0;
     return { totalPay, totalHours, shiftCount, avgHourlyRate };
-  }, [shifts]);
+  }, [filteredShifts]);
 
   const chartData = useMemo(() => {
-    return [...shifts].reverse().map(s => ({
+    return [...filteredShifts].reverse().map(s => ({
       date: s.date,
       Base: parseFloat(s.baseOvertimePay.toFixed(2)),
       Premiums: parseFloat((s.unsociablePay15 + s.unsociablePay30).toFixed(2)),
     }));
-  }, [shifts]);
+  }, [filteredShifts]);
+
+  const handleRangeChange = (start: string, end: string) => {
+    setStartDate(start);
+    setEndDate(end);
+  };
 
   // --- RENDER LOGIC ---
 
@@ -189,8 +216,14 @@ function App() {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
-        <AiInsight shifts={shifts} />
+        <AiInsight shifts={filteredShifts} />
         
+        <DateRangeFilter
+          startDate={startDate}
+          endDate={endDate}
+          onRangeChange={handleRangeChange}
+        />
+
         <StatsCards {...stats} />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -203,7 +236,7 @@ function App() {
           <div className="lg:col-span-2 space-y-6">
             
             {/* Chart Section */}
-            {shifts.length > 0 && (
+            {filteredShifts.length > 0 && (
               <div className="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800 h-80 transition-colors duration-300">
                 <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-4">Earnings Breakdown</h3>
                 <ResponsiveContainer width="100%" height="100%">
@@ -230,7 +263,7 @@ function App() {
               </div>
             )}
 
-            <ShiftList shifts={shifts} onDelete={handleDeleteShift} />
+            <ShiftList shifts={filteredShifts} onDelete={handleDeleteShift} />
           </div>
         </div>
       </main>
