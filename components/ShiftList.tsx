@@ -2,14 +2,15 @@
 
 import React from 'react';
 import { ShiftResult } from '../types';
-import { Calendar, Trash2, Phone, Clock } from 'lucide-react';
+import { Calendar, Trash2, Phone, Clock, Edit2 } from 'lucide-react';
 
 interface ShiftListProps {
   shifts: ShiftResult[];
   onDelete: (id: string) => void;
+  onEdit: (shift: ShiftResult) => void;
 }
 
-export const ShiftList: React.FC<ShiftListProps> = ({ shifts, onDelete }) => {
+export const ShiftList: React.FC<ShiftListProps> = ({ shifts, onDelete, onEdit }) => {
   if (shifts.length === 0) {
     return (
       <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800 p-12 flex flex-col items-center text-center transition-colors duration-300">
@@ -99,12 +100,22 @@ export const ShiftList: React.FC<ShiftListProps> = ({ shifts, onDelete }) => {
                   <span className="text-indigo-600 dark:text-indigo-400 font-bold text-lg">£{shift.totalPay.toFixed(2)}</span>
                 </td>
                 <td className="px-6 py-4 text-right">
-                  <button 
-                    onClick={() => onDelete(shift.id)}
-                    className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-full transition-colors"
-                  >
-                    <Trash2 size={16} />
-                  </button>
+                  <div className="flex items-center justify-end gap-1">
+                    <button
+                      onClick={() => onEdit(shift)}
+                      className="p-2 text-slate-400 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-full transition-colors"
+                      title="Edit Shift"
+                    >
+                      <Edit2 size={16} />
+                    </button>
+                    <button
+                      onClick={() => onDelete(shift.id)}
+                      className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-full transition-colors"
+                      title="Delete Shift"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}

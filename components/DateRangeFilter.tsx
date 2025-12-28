@@ -9,7 +9,7 @@ interface DateRangeFilterProps {
 
 export const DateRangeFilter: React.FC<DateRangeFilterProps> = ({ startDate, endDate, onRangeChange }) => {
   
-  const handleQuickSelect = (range: 'thisMonth' | 'lastMonth' | 'allTime') => {
+  const handleQuickSelect = (range: 'thisMonth' | 'lastMonth' | 'nextMonth' | 'allTime') => {
     const now = new Date();
     let start = '';
     let end = '';
@@ -22,6 +22,11 @@ export const DateRangeFilter: React.FC<DateRangeFilterProps> = ({ startDate, end
     } else if (range === 'lastMonth') {
       const firstDay = new Date(now.getFullYear(), now.getMonth() - 1, 1);
       const lastDay = new Date(now.getFullYear(), now.getMonth(), 0);
+      start = firstDay.toISOString().split('T')[0];
+      end = lastDay.toISOString().split('T')[0];
+    } else if (range === 'nextMonth') {
+      const firstDay = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+      const lastDay = new Date(now.getFullYear(), now.getMonth() + 2, 0);
       start = firstDay.toISOString().split('T')[0];
       end = lastDay.toISOString().split('T')[0];
     } else {
@@ -73,6 +78,12 @@ export const DateRangeFilter: React.FC<DateRangeFilterProps> = ({ startDate, end
               className="px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 transition-colors"
             >
               Last Month
+            </button>
+            <button
+              onClick={() => handleQuickSelect('nextMonth')}
+              className="px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 transition-colors"
+            >
+              Next Month
             </button>
             {!isAllTime && (
               <button

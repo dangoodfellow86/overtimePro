@@ -7,8 +7,9 @@ import {
   onSnapshot, 
   query, 
   orderBy, 
-  setDoc, 
-  getDoc 
+  setDoc,
+  getDoc,
+  updateDoc
 } from 'firebase/firestore';
 import { ShiftInput } from '../types';
 
@@ -41,6 +42,12 @@ export const deleteShiftFromDb = async (userId: string, shiftId: string) => {
   if (!db) return;
   const shiftRef = doc(db, 'users', userId, 'shifts', shiftId);
   await deleteDoc(shiftRef);
+};
+
+export const updateShiftInDb = async (userId: string, shiftId: string, shift: Omit<ShiftInput, 'id'>) => {
+  if (!db) return;
+  const shiftRef = doc(db, 'users', userId, 'shifts', shiftId);
+  await updateDoc(shiftRef, shift);
 };
 
 // --- SETTINGS (Standard Rate) ---

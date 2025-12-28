@@ -1,16 +1,25 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Plus, Save, CalendarCheck, Phone, Clock, Loader2 } from 'lucide-react';
+import { Plus, Save, CalendarCheck, Phone, Clock, Loader2, X } from 'lucide-react';
 import { ShiftInput, ShiftType } from '../types';
 import { isUKBankHoliday } from '../services/bankHolidayService';
 
 interface ShiftFormProps {
   onAddShift: (shift: Omit<ShiftInput, 'id'>) => Promise<void>;
+  onUpdateShift?: (id: string, shift: Omit<ShiftInput, 'id'>) => Promise<void>;
+  onCancelEdit?: () => void;
+  editingShift?: ShiftInput | null;
   defaultRate: number;
 }
 
-export const ShiftForm: React.FC<ShiftFormProps> = ({ onAddShift, defaultRate }) => {
+export const ShiftForm: React.FC<ShiftFormProps> = ({
+  onAddShift,
+  onUpdateShift,
+  onCancelEdit,
+  editingShift,
+  defaultRate
+}) => {
   const [shiftType, setShiftType] = useState<ShiftType>('overtime');
   const [date, setDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [startTime, setStartTime] = useState<string>('09:00');
@@ -20,12 +29,43 @@ export const ShiftForm: React.FC<ShiftFormProps> = ({ onAddShift, defaultRate })
   const [isAutoDetected, setIsAutoDetected] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Populate form when editingShift changes
+  useEffect(() => {
+    if (editingShift) {
+      setShiftType(editingShift.type);
+      setDate(editingShift.date);
+      setStartTime(editingShift.startTime);
+      setEndTime(editingShift.endTime);
+      setBaseRate(editingShift.baseRate.toString());
+      setIsBankHoliday(editingShift.isBankHoliday);
+      // Don't auto-detect on edit unless date changes, handled by next effect but we want to preserve manual overrides if possible
+      // For simplicity, we'll let the date effect run, but maybe we should check if date actually changed from initial edit state?
+      // Actually, the next effect will run on mount/update of `date`.
+      // If we setDate here, it triggers the next effect.
+    } else {
+      // Reset to defaults if not editing (or finished editing)
+      // Only reset if we just switched from editing to not editing?
+      // Or maybe we don't want to reset everything every time editingShift becomes null if the user was typing?
+      // But usually editingShift becomes null when we cancel or submit.
+    }
+  }, [editingShift]);
+
   // Auto-detect Bank Holiday when date changes
   useEffect(() => {
+    // If we are editing, we might want to respect the saved value initially.
+    // But if the user changes the date, we should re-detect.
+    // To avoid overwriting the editingShift's bank holiday status immediately upon loading:
+    if (editingShift && editingShift.date === date) {
+        // If the date matches the editing shift, don't auto-overwrite with detection logic immediately
+        // unless we want to enforce correctness.
+        // Let's trust the saved value for the initial load.
+        return;
+    }
+
     const isHoliday = isUKBankHoliday(date);
     setIsBankHoliday(isHoliday);
     setIsAutoDetected(isHoliday);
-  }, [date]);
+  }, [date, editingShift]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,15 +79,25 @@ export const ShiftForm: React.FC<ShiftFormProps> = ({ onAddShift, defaultRate })
     setIsSubmitting(true);
 
     try {
-      await onAddShift({
+      const shiftData = {
         type: shiftType,
         date,
         startTime,
         endTime,
         baseRate: rateValue,
         isBankHoliday,
-      });
-      // Optional: Show success feedback or reset specific fields here
+      };
+
+      if (editingShift && onUpdateShift) {
+        await onUpdateShift(editingShift.id, shiftData);
+      } else {
+        await onAddShift(shiftData);
+      }
+      
+      // Reset form if adding new, or if successful update (parent might clear editingShift)
+      if (!editingShift) {
+         // Optional: reset fields for next entry if it was an add
+      }
     } catch (error) {
       console.error("Error saving shift:", error);
       alert("Failed to save shift. Please ensure you are logged in and try again.");
@@ -98,7 +148,10 @@ export const ShiftForm: React.FC<ShiftFormProps> = ({ onAddShift, defaultRate })
             <Plus size={18} />
           </div>
           <h2 className="text-lg font-semibold text-slate-800 dark:text-white">
-            {shiftType === 'overtime' ? 'Log Overtime Shift' : 'Log On Call Shift'}
+            {editingShift
+              ? (shiftType === 'overtime' ? 'Edit Overtime Shift' : 'Edit On Call Shift')
+              : (shiftType === 'overtime' ? 'Log Overtime Shift' : 'Log On Call Shift')
+            }
           </h2>
         </div>
 
@@ -188,21 +241,33 @@ export const ShiftForm: React.FC<ShiftFormProps> = ({ onAddShift, defaultRate })
             )}
           </div>
 
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white font-medium py-2.5 rounded-lg transition-colors"
-          >
-            {isSubmitting ? (
-              <>
-                <Loader2 size={18} className="animate-spin" /> Saving...
-              </>
-            ) : (
-              <>
-                <Save size={18} /> Calculate & Save
-              </>
+          <div className="flex gap-3">
+            {editingShift && onCancelEdit && (
+              <button
+                type="button"
+                onClick={onCancelEdit}
+                disabled={isSubmitting}
+                className="flex-1 flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-medium py-2.5 rounded-lg transition-colors"
+              >
+                <X size={18} /> Cancel
+              </button>
             )}
-          </button>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="flex-[2] flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white font-medium py-2.5 rounded-lg transition-colors"
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 size={18} className="animate-spin" /> Saving...
+                </>
+              ) : (
+                <>
+                  <Save size={18} /> {editingShift ? 'Update Shift' : 'Calculate & Save'}
+                </>
+              )}
+            </button>
+          </div>
         </form>
       </div>
     </div>

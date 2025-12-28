@@ -11,7 +11,7 @@ import { AiInsight } from './components/AiInsight';
 import { Onboarding } from './components/Onboarding';
 import { Auth } from './components/Auth';
 import { useAuth } from './contexts/AuthContext';
-import { subscribeToShifts, addShiftToDb, deleteShiftFromDb, subscribeToSettings, updateStandardRate } from './services/db';
+import { subscribeToShifts, addShiftToDb, deleteShiftFromDb, updateShiftInDb, subscribeToSettings, updateStandardRate } from './services/db';
 import { auth } from './services/firebase';
 import { signOut } from 'firebase/auth';
 import { Clock, Moon, Sun, LogOut, Loader2, Settings } from 'lucide-react';
@@ -22,6 +22,7 @@ function App() {
   const [shifts, setShifts] = useState<ShiftResult[]>([]);
   const [standardRate, setStandardRate] = useState<number | null>(null);
   const [dataLoading, setDataLoading] = useState(false);
+  const [editingShift, setEditingShift] = useState<ShiftResult | null>(null);
   
   // Date Range State
   const [startDate, setStartDate] = useState(() => {
@@ -89,10 +90,30 @@ function App() {
     }
   };
 
+  const handleUpdateShift = async (id: string, input: Omit<ShiftInput, 'id'>) => {
+    if (user) {
+      await updateShiftInDb(user.uid, id, input);
+      setEditingShift(null);
+    }
+  };
+
   const handleDeleteShift = async (id: string) => {
     if (user) {
       await deleteShiftFromDb(user.uid, id);
+      if (editingShift?.id === id) {
+        setEditingShift(null);
+      }
     }
+  };
+
+  const handleEditShift = (shift: ShiftResult) => {
+    setEditingShift(shift);
+    // Scroll to form on mobile/tablet if needed, or just let user see it
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingShift(null);
   };
 
   const handleSetRate = async (rate: number) => {
@@ -229,7 +250,13 @@ function App() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Column: Form */}
           <div className="lg:col-span-1">
-            <ShiftForm onAddShift={handleAddShift} defaultRate={standardRate || 0} />
+            <ShiftForm
+              onAddShift={handleAddShift}
+              onUpdateShift={handleUpdateShift}
+              onCancelEdit={handleCancelEdit}
+              editingShift={editingShift}
+              defaultRate={standardRate || 0}
+            />
           </div>
 
           {/* Right Column: List and Charts */}
@@ -263,7 +290,11 @@ function App() {
               </div>
             )}
 
-            <ShiftList shifts={filteredShifts} onDelete={handleDeleteShift} />
+            <ShiftList
+              shifts={filteredShifts}
+              onDelete={handleDeleteShift}
+              onEdit={handleEditShift}
+            />
           </div>
         </div>
       </main>
